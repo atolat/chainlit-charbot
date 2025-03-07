@@ -16,5 +16,3 @@ This chatbot is powered by **OpenAI GPT-3.5-Turbo** and built using **Chainlit**
 ### 📚 Helpful Links:
 - [Chainlit Documentation](https://docs.chainlit.io) – Learn how Chainlit works
 - [Join the Chainlit Discord](https://discord.gg/k73SQ3FyUh) – Get support or share your project
-
-Enjoy your chat! 🚀
