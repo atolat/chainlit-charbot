@@ -85,7 +85,12 @@ async def start_chat():
         actions=actions
     ).send()
 
-@cl.action_callback
+@cl.action_callback("Concept Simplification")
+@cl.action_callback("Summarization")
+@cl.action_callback("Creativity")
+@cl.action_callback("Narrative Structure")
+@cl.action_callback("Arithmetic Reasoning")
+@cl.action_callback("Conversational Tone")
 async def on_action(action):
     # Store the selected aspect in the user session
     cl.user_session.set("selected_aspect", action.value)
