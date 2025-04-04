@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Optional, Tuple
 from logger_config import logger
 
 @dataclass
@@ -150,7 +150,7 @@ Adapt your communication style to match the user's level of expertise.""",
 Try asking something like:
 {examples}"""
 
-    def get_templates(self, aspect_name: Union[str, None]) -> Tuple[str, str]:
+    def get_templates(self, aspect_name: Optional[str]) -> Tuple[str, str]:
         """Get system and user templates for the specified aspect."""
         logger.debug(f"Getting templates for aspect: {aspect_name}")
         if aspect_name is None:
