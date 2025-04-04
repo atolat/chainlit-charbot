@@ -2,7 +2,7 @@
 
 # OpenAI Chat completion
 import os
-from openai import AsyncOpenAI, OpenAI  # importing openai for API usage
+from openai import AsyncOpenAI  # importing openai for API usage
 import chainlit as cl  # importing chainlit for our app
 from chainlit.prompt import Prompt, PromptMessage  # importing prompt tools
 from chainlit.playground.providers import ChatOpenAI  # importing ChatOpenAI tools
@@ -16,7 +16,7 @@ load_dotenv()
 logger.info("Environment variables loaded")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize managers
 config = ConfigManager()
@@ -56,23 +56,28 @@ async def main(message: cl.Message):
     model_config = config.get_model_config()
     logger.debug("Retrieved model configuration")
     
-    # Send message to OpenAI
-    response = client.chat.completions.create(
+    # Create a message element for streaming
+    msg = cl.Message(content="")
+    await msg.send()
+    
+    # Stream the response
+    stream = await client.chat.completions.create(
         model=model_config["name"],
         messages=messages,
         temperature=model_config["temperature"],
         max_tokens=model_config["max_tokens"],
         top_p=model_config["top_p"],
         frequency_penalty=model_config["frequency_penalty"],
-        presence_penalty=model_config["presence_penalty"]
+        presence_penalty=model_config["presence_penalty"],
+        stream=True
     )
-    logger.info("Received response from OpenAI")
     
-    # Send response back to user
-    await cl.Message(
-        content=response.choices[0].message.content
-    ).send()
-    logger.debug("Sent response to user")
+    # Process the stream
+    async for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            await msg.stream_token(chunk.choices[0].delta.content)
+    
+    logger.info("Completed streaming response")
 
 @cl.action_callback("select_aspect")
 async def on_action(action):
