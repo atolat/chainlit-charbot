@@ -112,12 +112,12 @@ async def main(message: cl.Message):
         return
 
     settings = {
-        "model": "gpt-3.5-turbo",
-        "temperature": 0.7,  # Slightly increased for more varied responses
-        "max_tokens": 500,
-        "top_p": 1,
-        "frequency_penalty": 0,
-        "presence_penalty": 0,
+        "model": "gpt-4-turbo-preview",  # Upgraded to GPT-4 Turbo
+        "temperature": 0.7,  # Balanced between creativity and consistency
+        "max_tokens": 1000,  # Increased for more detailed responses
+        "top_p": 0.9,  # Slightly reduced for more focused responses
+        "frequency_penalty": 0.3,  # Added to reduce repetition
+        "presence_penalty": 0.3,  # Added to encourage diverse topics
     }
 
     client = AsyncOpenAI()
