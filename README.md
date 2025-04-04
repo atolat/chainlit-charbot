@@ -46,5 +46,3 @@ A versatile chatbot powered by Chainlit and OpenAI's GPT-4 Turbo, featuring mult
 ## License
 
 MIT
-
-*Last updated: April 4, 2025*
