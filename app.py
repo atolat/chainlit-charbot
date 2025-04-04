@@ -10,6 +10,58 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Aspect descriptions and examples
+ASPECT_INFO = {
+    "Concept Simplification": {
+        "description": "Break down complex topics into simple, understandable terms",
+        "examples": [
+            "Explain quantum computing in simple terms",
+            "How does blockchain work?",
+            "What is machine learning?"
+        ]
+    },
+    "Summarization": {
+        "description": "Extract and present key information concisely",
+        "examples": [
+            "Summarize the key points of climate change",
+            "Give me a brief overview of the internet's history",
+            "What are the main ideas in this article?"
+        ]
+    },
+    "Creativity": {
+        "description": "Generate innovative ideas and unique perspectives",
+        "examples": [
+            "Generate ideas for a sustainable city",
+            "How could we improve remote work?",
+            "What are some creative solutions to reduce plastic waste?"
+        ]
+    },
+    "Narrative Structure": {
+        "description": "Organize information into compelling stories",
+        "examples": [
+            "Help me structure a story about time travel",
+            "Organize the history of AI as a narrative",
+            "How can I make this presentation more engaging?"
+        ]
+    },
+    "Arithmetic Reasoning": {
+        "description": "Solve mathematical problems step by step",
+        "examples": [
+            "Calculate compound interest on $1000 at 5% for 3 years",
+            "If a train travels at 60 mph for 2.5 hours, how far does it go?",
+            "What's the probability of getting three heads in a row?"
+        ]
+    },
+    "Conversational Tone": {
+        "description": "Engage in natural, friendly discussions",
+        "examples": [
+            "Tell me about your favorite book",
+            "What's your opinion on artificial intelligence?",
+            "How do you feel about remote work?"
+        ]
+    }
+}
+
 # Aspect-specific system templates
 ASPECT_TEMPLATES = {
     "Concept Simplification": """You are an expert at breaking down complex concepts into simple, understandable terms.
@@ -72,16 +124,26 @@ USER_TEMPLATES = {
 
 @cl.on_chat_start
 async def start_chat():
-    # Create aspect selection buttons
+    # Create aspect selection buttons with descriptions
     aspects = list(ASPECT_TEMPLATES.keys())
-    actions = [
-        cl.Action(name=aspect, value=aspect, label=aspect)
-        for aspect in aspects
-    ]
+    actions = []
+    
+    for aspect in aspects:
+        info = ASPECT_INFO[aspect]
+        description = f"{info['description']}\n\nExample tasks:\n" + "\n".join(f"• {example}" for example in info['examples'])
+        
+        actions.append(
+            cl.Action(
+                name=aspect,
+                value=aspect,
+                label=aspect,
+                description=description
+            )
+        )
     
     # Send welcome message with aspect selection
     await cl.Message(
-        content="Welcome! Please select an aspect for our conversation:",
+        content="Welcome! Please select an aspect for our conversation. Hover over each option to see examples and descriptions:",
         actions=actions
     ).send()
 
@@ -95,9 +157,18 @@ async def on_action(action):
     # Store the selected aspect in the user session
     cl.user_session.set("selected_aspect", action.value)
     
-    # Send confirmation message
+    # Get aspect info for the confirmation message
+    info = ASPECT_INFO[action.value]
+    examples = "\n".join(f"• {example}" for example in info['examples'][:2])  # Show first two examples
+    
+    # Send confirmation message with examples
     await cl.Message(
-        content=f"You've selected: {action.value}. How can I help you today?"
+        content=f"""You've selected: {action.value}
+        
+{info['description']}
+
+Try asking something like:
+{examples}"""
     ).send()
 
 @cl.on_message
