@@ -168,12 +168,6 @@ async def main(message: cl.Message):
     # Get the selected aspect from the session
     selected_aspect = cl.user_session.get("selected_aspect")
     
-    if not selected_aspect:
-        await cl.Message(
-            content="Please select an aspect first using the buttons above."
-        ).send()
-        return
-
     settings = {
         "model": "gpt-4-turbo-preview",  # Upgraded to GPT-4 Turbo
         "temperature": 0.7,  # Balanced between creativity and consistency

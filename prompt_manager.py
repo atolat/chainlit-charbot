@@ -10,6 +10,21 @@ class AspectInfo:
 
 class PromptManager:
     def __init__(self):
+        # Default template for when no aspect is selected
+        self.default_aspect = AspectInfo(
+            description="General purpose AI assistant with balanced capabilities",
+            examples=[
+                "What can you help me with?",
+                "How do you work?",
+                "What are your capabilities?"
+            ],
+            system_template="""You are a helpful AI assistant with expertise in various domains.
+Your goal is to provide clear, accurate, and helpful responses while maintaining a friendly tone.
+Adapt your communication style based on the user's needs and the complexity of the topic.""",
+            user_template="""{input}
+Think through your response step by step."""
+        )
+
         self.aspects = {
             "Concept Simplification": AspectInfo(
                 description="Break down complex topics into simple, understandable terms",
@@ -109,7 +124,7 @@ Adapt your communication style to match the user's level of expertise.""",
 
     def get_aspect_info(self, aspect_name: str) -> AspectInfo:
         """Get information for a specific aspect."""
-        return self.aspects[aspect_name]
+        return self.aspects.get(aspect_name, self.default_aspect)
 
     def get_action_description(self, aspect_name: str) -> str:
         """Get formatted description for action button."""
@@ -127,7 +142,10 @@ Adapt your communication style to match the user's level of expertise.""",
 Try asking something like:
 {examples}"""
 
-    def get_templates(self, aspect_name: str) -> tuple[str, str]:
+    def get_templates(self, aspect_name: str | None) -> tuple[str, str]:
         """Get system and user templates for an aspect."""
-        info = self.aspects[aspect_name]
+        if aspect_name is None:
+            info = self.default_aspect
+        else:
+            info = self.aspects.get(aspect_name, self.default_aspect)
         return info.system_template, info.user_template 
