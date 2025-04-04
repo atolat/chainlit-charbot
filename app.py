@@ -8,8 +8,10 @@ from chainlit.prompt import Prompt, PromptMessage  # importing prompt tools
 from chainlit.playground.providers import ChatOpenAI  # importing ChatOpenAI tools
 from dotenv import load_dotenv
 from prompt_manager import PromptManager
+from logger_config import logger
 
 load_dotenv()
+logger.info("Environment variables loaded")
 
 # Initialize prompt manager
 prompt_manager = PromptManager()
@@ -128,6 +130,7 @@ USER_TEMPLATES = {
 
 @cl.on_chat_start
 async def start_chat():
+    logger.info("Starting new chat session")
     # Create aspect selection buttons with descriptions
     aspects = prompt_manager.get_aspect_names()
     actions = []
@@ -147,6 +150,7 @@ async def start_chat():
         content="Welcome! Please select an aspect for our conversation. Hover over each option to see examples and descriptions:",
         actions=actions
     ).send()
+    logger.info("Welcome message sent with aspect selection buttons")
 
 @cl.action_callback("Concept Simplification")
 @cl.action_callback("Summarization")
@@ -157,16 +161,20 @@ async def start_chat():
 async def on_action(action):
     # Store the selected aspect in the user session
     cl.user_session.set("selected_aspect", action.value)
+    logger.info(f"User selected aspect: {action.value}")
     
     # Send confirmation message with examples
     await cl.Message(
         content=prompt_manager.get_confirmation_message(action.value)
     ).send()
+    logger.debug(f"Confirmation message sent for aspect: {action.value}")
 
 @cl.on_message
 async def main(message: cl.Message):
     # Get the selected aspect from the session
     selected_aspect = cl.user_session.get("selected_aspect")
+    logger.info(f"Processing message with aspect: {selected_aspect}")
+    logger.debug(f"User message: {message.content}")
     
     settings = {
         "model": "gpt-4-turbo-preview",  # Upgraded to GPT-4 Turbo
@@ -176,11 +184,13 @@ async def main(message: cl.Message):
         "frequency_penalty": 0.3,  # Added to reduce repetition
         "presence_penalty": 0.3,  # Added to encourage diverse topics
     }
+    logger.debug(f"OpenAI settings: {settings}")
 
     client = AsyncOpenAI()
 
     # Get the appropriate templates for the selected aspect
     system_template, user_template = prompt_manager.get_templates(selected_aspect)
+    logger.debug("Templates retrieved for message processing")
 
     prompt = Prompt(
         provider=ChatOpenAI.id,
@@ -199,21 +209,30 @@ async def main(message: cl.Message):
         inputs={"input": message.content},
         settings=settings,
     )
+    logger.debug("Prompt created for OpenAI API call")
 
     msg = cl.Message(content="")
+    logger.info("Starting OpenAI API call")
 
-    # Call OpenAI
-    async for stream_resp in await client.chat.completions.create(
-        messages=[m.to_openai() for m in prompt.messages], stream=True, **settings
-    ):
-        token = stream_resp.choices[0].delta.content
-        if not token:
-            token = ""
-        await msg.stream_token(token)
+    try:
+        # Call OpenAI
+        async for stream_resp in await client.chat.completions.create(
+            messages=[m.to_openai() for m in prompt.messages], stream=True, **settings
+        ):
+            token = stream_resp.choices[0].delta.content
+            if not token:
+                token = ""
+            await msg.stream_token(token)
+        
+        # Update the prompt object with the completion
+        prompt.completion = msg.content
+        msg.prompt = prompt
 
-    # Update the prompt object with the completion
-    prompt.completion = msg.content
-    msg.prompt = prompt
-
-    # Send and close the message stream
-    await msg.send()
+        # Send and close the message stream
+        await msg.send()
+        logger.info("Response successfully sent to user")
+    except Exception as e:
+        logger.error(f"Error during OpenAI API call: {str(e)}")
+        await cl.Message(
+            content="I apologize, but I encountered an error processing your request. Please try again."
+        ).send()

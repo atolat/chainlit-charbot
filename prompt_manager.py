@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List
+from logger_config import logger
 
 @dataclass
 class AspectInfo:
@@ -10,6 +11,7 @@ class AspectInfo:
 
 class PromptManager:
     def __init__(self):
+        logger.info("Initializing PromptManager")
         # Default template for when no aspect is selected
         self.default_aspect = AspectInfo(
             description="General purpose AI assistant with balanced capabilities",
@@ -24,6 +26,7 @@ Adapt your communication style based on the user's needs and the complexity of t
             user_template="""{input}
 Think through your response step by step."""
         )
+        logger.debug("Default aspect template created")
 
         self.aspects = {
             "Concept Simplification": AspectInfo(
@@ -117,22 +120,27 @@ Adapt your communication style to match the user's level of expertise.""",
 - How does this relate to everyday experience?"""
             )
         }
+        logger.info(f"Initialized {len(self.aspects)} aspects")
 
     def get_aspect_names(self) -> List[str]:
         """Get list of available aspect names."""
+        logger.debug("Getting aspect names")
         return list(self.aspects.keys())
 
     def get_aspect_info(self, aspect_name: str) -> AspectInfo:
         """Get information for a specific aspect."""
+        logger.debug(f"Getting aspect info for: {aspect_name}")
         return self.aspects.get(aspect_name, self.default_aspect)
 
     def get_action_description(self, aspect_name: str) -> str:
         """Get formatted description for action button."""
+        logger.debug(f"Getting action description for: {aspect_name}")
         info = self.aspects[aspect_name]
         return f"{info.description}\n\nExample tasks:\n" + "\n".join(f"• {example}" for example in info.examples)
 
     def get_confirmation_message(self, aspect_name: str) -> str:
         """Get formatted confirmation message for selected aspect."""
+        logger.debug(f"Getting confirmation message for: {aspect_name}")
         info = self.aspects[aspect_name]
         examples = "\n".join(f"• {example}" for example in info.examples[:2])
         return f"""You've selected: {aspect_name}
@@ -145,7 +153,9 @@ Try asking something like:
     def get_templates(self, aspect_name: str | None) -> tuple[str, str]:
         """Get system and user templates for an aspect."""
         if aspect_name is None:
+            logger.info("No aspect selected, using default template")
             info = self.default_aspect
         else:
+            logger.info(f"Using templates for aspect: {aspect_name}")
             info = self.aspects.get(aspect_name, self.default_aspect)
         return info.system_template, info.user_template 
