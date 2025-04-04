@@ -7,8 +7,12 @@ import chainlit as cl  # importing chainlit for our app
 from chainlit.prompt import Prompt, PromptMessage  # importing prompt tools
 from chainlit.playground.providers import ChatOpenAI  # importing ChatOpenAI tools
 from dotenv import load_dotenv
+from prompt_manager import PromptManager
 
 load_dotenv()
+
+# Initialize prompt manager
+prompt_manager = PromptManager()
 
 # Aspect descriptions and examples
 ASPECT_INFO = {
@@ -125,19 +129,16 @@ USER_TEMPLATES = {
 @cl.on_chat_start
 async def start_chat():
     # Create aspect selection buttons with descriptions
-    aspects = list(ASPECT_TEMPLATES.keys())
+    aspects = prompt_manager.get_aspect_names()
     actions = []
     
     for aspect in aspects:
-        info = ASPECT_INFO[aspect]
-        description = f"{info['description']}\n\nExample tasks:\n" + "\n".join(f"• {example}" for example in info['examples'])
-        
         actions.append(
             cl.Action(
                 name=aspect,
                 value=aspect,
                 label=aspect,
-                description=description
+                description=prompt_manager.get_action_description(aspect)
             )
         )
     
@@ -157,18 +158,9 @@ async def on_action(action):
     # Store the selected aspect in the user session
     cl.user_session.set("selected_aspect", action.value)
     
-    # Get aspect info for the confirmation message
-    info = ASPECT_INFO[action.value]
-    examples = "\n".join(f"• {example}" for example in info['examples'][:2])  # Show first two examples
-    
     # Send confirmation message with examples
     await cl.Message(
-        content=f"""You've selected: {action.value}
-        
-{info['description']}
-
-Try asking something like:
-{examples}"""
+        content=prompt_manager.get_confirmation_message(action.value)
     ).send()
 
 @cl.on_message
@@ -194,8 +186,7 @@ async def main(message: cl.Message):
     client = AsyncOpenAI()
 
     # Get the appropriate templates for the selected aspect
-    system_template = ASPECT_TEMPLATES[selected_aspect]
-    user_template = USER_TEMPLATES[selected_aspect]
+    system_template, user_template = prompt_manager.get_templates(selected_aspect)
 
     prompt = Prompt(
         provider=ChatOpenAI.id,
