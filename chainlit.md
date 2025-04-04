@@ -1,7 +1,7 @@
 # 🤖 Welcome to the Chainlit GPT Assistant!
 
 Hi there! 👋  
-This chatbot is powered by **OpenAI GPT-3.5-Turbo** and built using **Chainlit** to provide real-time, interactive conversations with streaming responses.
+This chatbot is powered by **OpenAI GPT-4 Turbo** and built using **Chainlit** to provide real-time, interactive conversations with streaming responses.
 
 ## 🎯 Conversation Aspects
 
@@ -22,7 +22,7 @@ This chatbot offers multiple conversation aspects to tailor the interaction to y
 
 ## ⚙️ Technical Details
 
-- 🧠 **LLM:** OpenAI GPT-3.5-Turbo
+- 🧠 **LLM:** OpenAI GPT-4 Turbo
 - 🛠️ **Framework:** Chainlit
 - 📝 **Features:** Comprehensive logging system, modular codebase
 - 🌐 **Deployed on:** Hugging Face Spaces
