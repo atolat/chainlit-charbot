@@ -8,6 +8,7 @@ from chainlit.prompt import Prompt, PromptMessage  # importing prompt tools
 from chainlit.playground.providers import ChatOpenAI  # importing ChatOpenAI tools
 from dotenv import load_dotenv
 from prompt_manager import PromptManager
+from config_manager import ConfigManager
 from logger_config import logger
 
 # Load environment variables
@@ -17,7 +18,8 @@ logger.info("Environment variables loaded")
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Initialize PromptManager
+# Initialize managers
+config = ConfigManager()
 prompt_manager = PromptManager()
 
 @cl.on_chat_start
@@ -50,12 +52,19 @@ async def main(message: cl.Message):
     ]
     logger.debug("Created messages for API call")
     
+    # Get model configuration
+    model_config = config.get_model_config()
+    logger.debug("Retrieved model configuration")
+    
     # Send message to OpenAI
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=model_config["name"],
         messages=messages,
-        temperature=0.7,
-        max_tokens=1000
+        temperature=model_config["temperature"],
+        max_tokens=model_config["max_tokens"],
+        top_p=model_config["top_p"],
+        frequency_penalty=model_config["frequency_penalty"],
+        presence_penalty=model_config["presence_penalty"]
     )
     logger.info("Received response from OpenAI")
     
